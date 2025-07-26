@@ -3,7 +3,7 @@ use anchor_lang::prelude::*;
 #[account]
 #[derive(InitSpace)]
 pub struct Challenge {
-  pub id: Pubkey, // The PDA based on initiator's pubkey and challenge name as seeds
+  pub name: String, // The name as seeds for deriving Challenge PDA
   pub initiator: Pubkey,   
   pub stake_mint: Option<Pubkey>, // It could be native Sol or SPL token.
   pub stake_amount: u64,
@@ -12,4 +12,5 @@ pub struct Challenge {
   pub claim_start_from: i64,
   pub schema: Pubkey, // The schema will be attested by authorized signers.
   pub bump: u8,
+  pub bump_vault: u8
 }
