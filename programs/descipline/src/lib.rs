@@ -1,13 +1,17 @@
 #![allow(unexpected_cfgs)]
 #![allow(deprecated)]
+pub mod instructions;
+pub mod state;
+pub mod interfaces;
 pub mod constants;
 pub mod errors;
-pub mod instructions;
-pub mod interfaces;
-pub mod state;
 pub mod utils;
 
 use anchor_lang::prelude::*;
+pub use instructions::*;
+pub use constants::*;
+pub use errors::*;
+pub use utils::*;
 
 declare_id!("descip1111111111111111111111111111111111111");
 
@@ -15,11 +19,31 @@ declare_id!("descip1111111111111111111111111111111111111");
 pub mod descipline {
     use super::*;
 
-    pub fn initialize(ctx: Context<Initialize>) -> Result<()> {
-        msg!("Greetings from: {:?}", ctx.program_id);
+    pub fn init_authority(ctx: Context<InitAuthority>) -> Result<()> {
+        ctx.accounts.init_authority(&ctx.bumps)?;
+
+        Ok(())
+    }
+
+    pub fn create_challenge(
+        ctx: Context<CreateChallenge>,
+        name: String,
+        token_allowed: TokenAllowed,
+        stake_amount: u64,
+        fee: u16,
+        stake_end_at: i64,
+        claim_start_from: i64,
+    ) -> Result<()> {
+        ctx.accounts.create_challenge(
+            name,
+            token_allowed,
+            stake_amount,
+            fee,
+            stake_end_at,
+            claim_start_from,
+            &ctx.bumps
+        )?;
+        
         Ok(())
     }
 }
-
-#[derive(Accounts)]
-pub struct Initialize {}
