@@ -1,5 +1,12 @@
 #![allow(unexpected_cfgs)]
 #![allow(deprecated)]
+pub mod constants;
+pub mod errors;
+pub mod instructions;
+pub mod interfaces;
+pub mod state;
+pub mod utils;
+
 use anchor_lang::prelude::*;
 
 declare_id!("descip1111111111111111111111111111111111111");
