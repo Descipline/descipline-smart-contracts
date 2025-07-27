@@ -3,10 +3,16 @@
   "scripts": {
     "lint:fix": "prettier */*.js \"*/**/*{.js,.ts}\" -w",
     "lint": "prettier */*.js \"*/**/*{.js,.ts}\" --check",
-    "update:programid": "bash ./scripts/update_program_id.sh"
+    "update:programid": "bash ./scripts/update_program_id.sh",
+    "sas-demo:standard": "ts-node scripts/sas-standard-gill-demo.ts"
   },
   "dependencies": {
-    "@coral-xyz/anchor": "^0.31.1"
+    "@coral-xyz/anchor": "^0.31.1",
+    "@solana-program/compute-budget": "^0.8.0",
+    "@solana-program/token-2022": "^0.4.2",
+    "@solana/kit": "^2.3.0",
+    "gill": "^0.10.2",
+    "sas-lib": "^1.0.9"
   },
   "devDependencies": {
     "chai": "^4.3.4",
@@ -16,6 +22,8 @@
     "@types/chai": "^4.3.0",
     "@types/mocha": "^9.0.0",
     "typescript": "^5.7.3",
+    "@types/node": "^24.0.4",
+    "ts-node": "^10.9.2",
     "prettier": "^2.6.2"
   }
 }
