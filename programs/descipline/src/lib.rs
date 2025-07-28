@@ -46,4 +46,10 @@ pub mod descipline {
         
         Ok(())
     }
+
+    pub fn stake(ctx: Context<Stake>) -> Result<()> {
+        ctx.accounts.stake(&ctx.bumps)?;
+        
+        Ok(())
+    }
 }
