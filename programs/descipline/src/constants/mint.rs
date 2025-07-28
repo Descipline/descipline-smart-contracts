@@ -21,7 +21,7 @@ pub const WSOL: TokenInfo = TokenInfo {
 
 pub const USDC: TokenInfo = TokenInfo {
   token: TokenAllowed::USDC,
-  mint: pubkey!("EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v"),
+  mint: pubkey!("4NQMuSBhVrqTh8FMv5AbHvADVwHSnxrHNERPdAFu5B8p"),
   decimals: 6,
 };
 

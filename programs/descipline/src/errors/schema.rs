@@ -25,4 +25,7 @@ pub enum SchemaError {
 
     #[msg("Invalid layout")]
     InvalidLayout,
+
+    #[msg("Invalid Discriminator")]
+    InvalidAccountData,
 } 
