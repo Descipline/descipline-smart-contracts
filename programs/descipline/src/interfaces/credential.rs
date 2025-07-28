@@ -1,5 +1,5 @@
 use anchor_lang::prelude::*;
-use crate::errors::CredentialError;
+use crate::{constants::Discriminators, errors::CredentialError};
 
 /// Interface for loading Pinocchio Credential account data
 pub struct CredentialInterface {
@@ -11,14 +11,17 @@ pub struct CredentialInterface {
 impl CredentialInterface {
     /// Create a new CredentialInterface from account data
     pub fn new(account_data: &[u8]) -> Result<Self> {
+        // Check discriminator
+        require!(account_data[0] == Discriminators::Credential as u8, CredentialError::InvalidAccountData);
+
         // for discriminator and authority
-        let mut offset = 40;
+        let mut offset = 33;
 
         // Deserialize Pinocchio Credential account based on the provided structure
-        require!(account_data.len() > 48, CredentialError::InvalidCredentialData);
+        require!(account_data.len() >= 73, CredentialError::InvalidCredentialData);
         
         // Extract authority (first 32 bytes after discriminator)
-        let authority = Pubkey::new_from_array(account_data[8..40].try_into().unwrap());
+        let authority = Pubkey::new_from_array(account_data[1..33].try_into().unwrap());
         
         // Read name length (4 bytes for length)
         let name_length = u32::from_le_bytes(
@@ -59,7 +62,7 @@ impl CredentialInterface {
         })
     }
     
-    /// Verify authority matches credential_guardian.admin
+    /// Verify authority matches credential_authority.signer
     pub fn verify_authority(&self, signer: Pubkey) -> Result<()> {
         require!(
             self.authority == signer,

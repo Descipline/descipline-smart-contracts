@@ -4,7 +4,7 @@ use anchor_spl::{associated_token::AssociatedToken, token::{Mint, Token, TokenAc
 use crate::{
     state::{Challenge, CredentialAuthority}, 
     interfaces::{SchemaInterface, CredentialInterface},
-    constants::{TokenAllowed, SCHEMA_LAY_OUT, ATTESTOR_NUMBER}, 
+    constants::{TokenAllowed, ATTESTOR_NUMBER}, 
     errors::{GeneralError, CredentialError},
     // utils::{PinocchioVerifier, SchemaValidator}
 };
@@ -33,8 +33,6 @@ pub struct CreateChallenge<'info> {
   )]
   pub challenge: Account<'info, Challenge>,
 
-
-
   /// CHECK: manually verified schema structure
   pub schema: UncheckedAccount<'info>,
   /// CHECK: manually verified credential structure
@@ -61,16 +59,15 @@ impl<'info> CreateChallenge<'info> {
     fee: u16,
     stake_end_at: i64,
     claim_start_from: i64,
-    bumps: CreateChallengeBumps,
+    bumps: &CreateChallengeBumps,
   ) -> Result<()> {
     // Load and verify schema
     let schema_data = self.schema.try_borrow_data()?;
     let schema = SchemaInterface::new(&schema_data)?;
-    
+
     // Verify schema name matches challenge name
     schema.verify_name(&name)?;
     schema.verify_credential(self.credential.key())?;
-    schema.verify_layout(&SCHEMA_LAY_OUT)?; // todo: check merkle root data type, add to constants
     
     // Extract credential
     let credential_data = self.credential.try_borrow_data()?;
@@ -79,7 +76,6 @@ impl<'info> CreateChallenge<'info> {
 
     require!(credential.authorized_signers.len() as u8 == ATTESTOR_NUMBER, CredentialError::TooManySigners);
     let attestor = credential.authorized_signers[0]; // simply only allow one signer
-
 
     self.challenge.set_inner(
       Challenge {

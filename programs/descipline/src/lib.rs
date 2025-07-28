@@ -13,7 +13,7 @@ pub use constants::*;
 pub use errors::*;
 pub use utils::*;
 
-declare_id!("descip1111111111111111111111111111111111111");
+declare_id!("EDQPhoxuBdRmcQhCAtTxVcbqrErmR9WgtsQF3z3BLW9M");
 
 #[program]
 pub mod descipline {

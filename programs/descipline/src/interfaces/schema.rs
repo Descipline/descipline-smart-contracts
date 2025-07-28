@@ -1,5 +1,5 @@
 use anchor_lang::prelude::*;
-use crate::errors::SchemaError;
+use crate::{challenge, constants::Discriminators, errors::SchemaError};
 
 /// Interface for loading Pinocchio Schema account data
 pub struct SchemaInterface {
@@ -11,19 +11,24 @@ pub struct SchemaInterface {
 impl SchemaInterface {
     /// Create a new SchemaInterface from account data
     pub fn new(account_data: &[u8]) -> Result<Self> {
+        // Check discriminator
+        require!(account_data[0] == Discriminators::Schema as u8, SchemaError::InvalidAccountData);
+
         // for discriminator and credential
-        let mut offset = 40;
+        let mut offset = 33;
 
         // Deserialize Pinocchio Schema account based on the provided structure
-        require!(account_data.len() > 58, SchemaError::InvalidSchemaData);
+        require!(account_data.len() > 51, SchemaError::InvalidSchemaData);
+        msg!("schema account data length: {}", account_data.len());
         
         // Extract credential
-        let credential = Pubkey::new_from_array(account_data[8..40].try_into().unwrap());
+        let credential = Pubkey::new_from_array(account_data[1..33].try_into().unwrap());
         
 
         let name_length = u32::from_le_bytes(
             account_data[offset..offset+4].try_into().unwrap()
         ) as usize;
+        msg!("name_length: {}", name_length);
 
         offset += 4;
 
@@ -60,6 +65,9 @@ impl SchemaInterface {
     
     /// Verify that schema name matches challenge name
     pub fn verify_name(&self, challenge_name: &str) -> Result<()> {
+        msg!("schema name: {}", &self.name);
+        msg!("challenge name: {}", challenge_name);
+
         require!(
             self.name == challenge_name,
             SchemaError::NameMismatch
@@ -75,14 +83,5 @@ impl SchemaInterface {
         );
         Ok(())
     }
-
-    /// Verify layout matches expected
-    pub fn verify_layout(&self, expected_layout: &[u8]) -> Result<()> {
-        // let expected_layout = vec![13, 0, 13];
-        require!(
-            self.layout == expected_layout,
-            SchemaError::InvalidLayout
-        );
-        Ok(())
-    }
+    
 } 
