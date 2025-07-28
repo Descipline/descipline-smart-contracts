@@ -5,6 +5,10 @@ target
 node_modules
 test-ledger
 app
+~
 
 **/*.rs.bk
 scripts/*.py
+
+.env
+vanity_output.log
