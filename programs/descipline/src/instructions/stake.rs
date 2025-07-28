@@ -14,6 +14,7 @@ pub struct Stake<'info> {
   pub challenger: Signer<'info>,
 
   #[account(
+    mut,
     associated_token::mint = stake_mint,
     associated_token::authority = challenger
   )]
@@ -29,6 +30,7 @@ pub struct Stake<'info> {
   pub receipt: Account<'info, Receipt>,
 
   #[account(
+    mut,
     associated_token::mint = stake_mint,
     associated_token::authority = challenge,
     constraint = stake_mint.key() == challenge.token_allowed.mint() @ GeneralError::NotAllowedToken
@@ -54,7 +56,8 @@ impl<'info> Stake<'info> {
   ) -> Result<()> {
     // before stake endtime
     require!(Clock::get()?.unix_timestamp < self.challenge.stake_end_at, StakeError::StakeEnded);
-
+    // msg!("challenge amount is: {} {}", self.challenger_ata.amount, self.challenge.stake_amount);
+    // assert!(false, "early revert");
     // check token balance >= required
     require!( self.challenger_ata.amount >= self.challenge.stake_amount, StakeError::InsufficientToken);
     
