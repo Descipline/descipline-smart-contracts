@@ -36,7 +36,7 @@ import fs from 'fs';
 const CONFIG = {
     CLUSTER_OR_RPC: 'devnet',
     CREDENTIAL_NAME: 'TEST-CHALLENGE',
-    SCHEMA_NAME: 'THE-CHALLENGE',
+    SCHEMA_NAME: 'TEST-CHALLENGE',
     SCHEMA_LAYOUT: Buffer.from([13, 0, 13]),
     SCHEMA_FIELDS: ["merkle_root", "winner_count", "winner_list_uri"],
     SCHEMA_VERSION: 1,
@@ -53,7 +53,7 @@ async function setupWallets(client: SolanaClient) {
     try {
          
         // Get bytes from local keypair file.
-        const keypairFile = fs.readFileSync('/home/fc/.config/solana/id.json');
+        const keypairFile = fs.readFileSync('/home/fc/.config/solana/id_1.json');
         const keypairBytes = new Uint8Array(JSON.parse(keypairFile.toString()));
   
         // Create a KeyPairSigner from the bytes.
