@@ -6,7 +6,6 @@ import { bs58 } from "@coral-xyz/anchor/dist/cjs/utils/bytes";
 import { createMint, getAssociatedTokenAddress, getOrCreateAssociatedTokenAccount } from "@solana/spl-token";
 require("dotenv").config();
 
-
 // 1. credential_signer sign credential 
 // 2. sign schema
 // 3. create challenge
@@ -25,6 +24,9 @@ describe("descipline", () => {
   
 
   const credentialSigner = provider.wallet.payer;
+  
+  const credentialSignerPubkey = credentialSigner?.publicKey;
+  console.log(credentialSignerPubkey?.toBase58())
   const authorizedSigners = [credentialSigner];
 
   // Decode the base58 private key string
@@ -33,17 +35,34 @@ describe("descipline", () => {
 
   // Create Keypair from secret key
   const initiator = Keypair.fromSecretKey(secretKey);
+  console.log("initiator pubkey:", initiator.publicKey.toBase58());
   const credentialAuthorityPDA = anchor.web3.PublicKey.findProgramAddressSync([Buffer.from("authority")], program.programId)[0];
+  console.log(credentialAuthorityPDA.toBase58())
+
+  const challenge_name = 'TEST-CHALLENGE';
+  const stake_amount = new anchor.BN(5000 * 10**6);
+  const fee = 100;
+  const stake_end_at = new anchor.BN(Math.floor(Date.now() / 1000) +  15 * 3600); // seconds since epoch
+  const claim_start_from = new anchor.BN(Math.floor(Date.now() / 1000) + 15 * 3600 + 1);
 
   // Needed PDAs and mint
   let challengePda: PublicKey;
   let vault: PublicKey;
   let stakeMint: PublicKey;
+  let receipt1;
+  let receipt2;
   let bump: number;
 
-
-
   before(async () => {
+    // derive challenge PDA
+    [challengePda, bump] = await PublicKey.findProgramAddress(
+      [
+        Buffer.from("challenge"),
+        initiator.publicKey.toBuffer(),
+        Buffer.from(challenge_name),
+      ],
+      program.programId
+    );
   });
 
   it.skip("1. Initialize Credential Authority", async () => {
@@ -55,30 +74,13 @@ describe("descipline", () => {
     console.log("Your transaction signature", tx);
   });
 
-  it("2. Initialize Credential Authority", async () => {
-    const challenge_name = 'TEST-CHALLENGE';
-    const stake_amount = new anchor.BN(5*10**9);
-    const fee = 100;
-    const stake_end_at = new anchor.BN(Math.floor(Date.now() / 1000) +  15 * 3600); // seconds since epoch
-    const claim_start_from = new anchor.BN(Math.floor(Date.now() / 1000) + 15 * 3600 + 1);
-
-      // Step 2: Derive challenge PDA
-
-      [challengePda, bump] = await PublicKey.findProgramAddress(
-        [
-          Buffer.from("challenge"),
-          initiator.publicKey.toBuffer(),
-          Buffer.from(challenge_name),
-        ],
-        program.programId
-      );
-  
-      // Step 3: Derive vault ATA
-      vault = await getAssociatedTokenAddress(
-        USDC_MINT,
-        challengePda,
-        true // allowOwnerOffCurve = true for PDA
-      );
+  it.skip("2. Create Challenge", async () => {
+    // derive vault ATA
+    vault = await getAssociatedTokenAddress(
+      USDC_MINT,
+      challengePda,
+      true // allowOwnerOffCurve = true for PDA
+    );
 
     const tx = await program.methods
     .createChallenge(
@@ -102,4 +104,50 @@ describe("descipline", () => {
     .rpc();
     console.log("Your transaction signature", tx);
   });
+
+  it("3. Stake", async () => {
+    // derive challenge PDA
+    [receipt1, bump] = await PublicKey.findProgramAddress(
+        [
+          Buffer.from("receipt"),
+          challengePda.toBuffer(),
+          initiator.publicKey.toBuffer(),
+        ],
+        program.programId
+      );
+    const tx = await program.methods
+    .stake()
+    .accountsPartial({
+      challenger: initiator.publicKey,
+      stakeMint: USDC_MINT,
+      challenge: challengePda,
+      receipt: receipt1,
+      vault: vault
+    })
+    .signers([initiator])
+    .rpc();
+    console.log("Your transaction signature", tx);
+
+    // derive challenge PDA
+    [receipt2, bump] = await PublicKey.findProgramAddress(
+      [
+        Buffer.from("receipt"),
+        challengePda.toBuffer(),
+        credentialSignerPubkey!.toBuffer(),
+      ],
+      program.programId
+    );
+    
+    const tx1 = await program.methods
+    .stake()
+    .accountsPartial({
+      challenger: credentialSigner?.publicKey,
+      stakeMint: USDC_MINT,
+      challenge: challengePda,
+      receipt: receipt2,
+      vault
+    })
+    .rpc();    
+    console.log("Your transaction signature", tx1);
+  })
 });
