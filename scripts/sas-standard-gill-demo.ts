@@ -35,16 +35,56 @@ import fs from 'fs';
  
 const CONFIG = {
     CLUSTER_OR_RPC: 'devnet',
-    CREDENTIAL_NAME: 'TEST-CHALLENGE',
-    SCHEMA_NAME: 'TEST-CHALLENGE',
+    CREDENTIAL_NAME: 'TEST-CHALLENGE3',
+    SCHEMA_NAME: 'TEST-CHALLENGE3',
     SCHEMA_LAYOUT: Buffer.from([13, 0, 13]),
     SCHEMA_FIELDS: ["merkle_root", "winner_count", "winner_list_uri"],
     SCHEMA_VERSION: 1,
     SCHEMA_DESCRIPTION: 'Challenge schema for testing',
     ATTESTATION_DATA: {
-        merkle_root: [1,2,3],
-        winner_count: 1,
-        winner_list_uri: [1,2,3],
+        merkle_root: Buffer.from([
+            186,
+            152,
+            231,
+            157,
+            94,
+            195,
+            58,
+            216,
+            158,
+            108,
+            16,
+            132,
+            28,
+            192,
+            26,
+            132,
+            250,
+            128,
+            237,
+            34,
+            77,
+            214,
+            155,
+            75,
+            125,
+            28,
+            225,
+            176,
+            191,
+            173,
+            6,
+            33
+          ]),
+        winner_count: 2,
+        winner_list_uri: Buffer.from([
+            104, 116, 116, 112, 115,  58,  47,  47, 103,  97, 116, 101,
+            119,  97, 121,  46, 105, 114, 121, 115,  46, 120, 121, 122,
+             47,  71,  75,  90, 103,  56,  78, 122,  69, 100,  80, 115,
+            106, 119,  57, 104,  66,  49, 122, 107,  89,  85,  98,  88,
+            113, 106,  89,  82, 113,  86,  98, 104,  75, 111,  88, 120,
+            105,  54,  75, 120, 114,  76,  80,  68,  98
+          ]), // https://gateway.irys.xyz/GKZg8NzEdPsjw9hB1zkYUbXqjYRqVbhKoXxi6KxrLPDb
     },
     ATTESTATION_EXPIRY_DAYS: 365
 };
@@ -231,37 +271,37 @@ async function main() {
  
     await sendAndConfirmInstructions(client, payer, [changeAuthSignersInstruction], 'Authorized signers updated'); 
  
-    // Step 6: Verify Attestations
-    console.log("\n6. Verifying Attestations...");
+    // // Step 6: Verify Attestations
+    // console.log("\n6. Verifying Attestations...");
  
-    const isUserVerified = await verifyAttestation({
-        client,
-        schemaPda,
-        userAddress: testUser.address
-    });
-    console.log(`    - Test User is ${isUserVerified ? 'verified' : 'not verified'}`);
+    // const isUserVerified = await verifyAttestation({
+    //     client,
+    //     schemaPda,
+    //     userAddress: testUser.address
+    // });
+    // console.log(`    - Test User is ${isUserVerified ? 'verified' : 'not verified'}`);
  
-    const randomUser = await generateKeyPairSigner();
-    const isRandomVerified = await verifyAttestation({
-        client,
-        schemaPda,
-        userAddress: randomUser.address
-    });
-    console.log(`    - Random User is ${isRandomVerified ? 'verified' : 'not verified'}`); 
+    // const randomUser = await generateKeyPairSigner();
+    // const isRandomVerified = await verifyAttestation({
+    //     client,
+    //     schemaPda,
+    //     userAddress: randomUser.address
+    // });
+    // console.log(`    - Random User is ${isRandomVerified ? 'verified' : 'not verified'}`); 
 
-    // Step 7. Close Attestation
-    console.log("\n7. Closing Attestation...");
+    // // Step 7. Close Attestation
+    // console.log("\n7. Closing Attestation...");
 
-    const eventAuthority = await deriveEventAuthorityAddress();
-    const closeAttestationInstruction = await getCloseAttestationInstruction({
-        payer,
-        attestation: attestationPda,
-        authority: authorizedSigner1,
-        credential: credentialPda,
-        eventAuthority,
-        attestationProgram: SOLANA_ATTESTATION_SERVICE_PROGRAM_ADDRESS
-    });
-    await sendAndConfirmInstructions(client, payer, [closeAttestationInstruction], 'Closed attestation');
+    // const eventAuthority = await deriveEventAuthorityAddress();
+    // const closeAttestationInstruction = await getCloseAttestationInstruction({
+    //     payer,
+    //     attestation: attestationPda,
+    //     authority: authorizedSigner1,
+    //     credential: credentialPda,
+    //     eventAuthority,
+    //     attestationProgram: SOLANA_ATTESTATION_SERVICE_PROGRAM_ADDRESS
+    // });
+    // await sendAndConfirmInstructions(client, payer, [closeAttestationInstruction], 'Closed attestation');
 
 }
  

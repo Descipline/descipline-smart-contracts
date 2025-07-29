@@ -7,6 +7,7 @@
     "sas-demo:standard": "ts-node scripts/sas-standard-gill-demo.ts",
     "test:sb": "anchor test --skip-build",
     "test:sbsd": "anchor test --skip-build --skip-deploy",
+    "attestation-uri":"ts-node scripts/attestation_uri.ts",
     "create-merkle-proof": "cd scripts/brine_tree && cargo run"
   },
   "dependencies": {
@@ -30,6 +31,9 @@
     "prettier": "^2.6.2",
     "ts-mocha": "^10.0.0",
     "ts-node": "^10.9.2",
-    "typescript": "^5.7.3"
+    "typescript": "^5.7.3",
+    "@metaplex-foundation/umi": "^1.2.0",
+    "@metaplex-foundation/umi-bundle-defaults": "^1.2.0",
+    "@metaplex-foundation/umi-uploader-irys": "^1.2.0"
   }
 }

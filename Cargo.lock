@@ -411,6 +411,16 @@ dependencies = [
 ]
 
 [[package]]
+name = "brine-tree"
+version = "0.5.4"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "4b1edc699dff283cdda4f59a74aedc5aa24cbdb84482e264c5778e4cd8665ca4"
+dependencies = [
+ "bytemuck",
+ "sha3",
+]
+
+[[package]]
 name = "bs58"
 version = "0.5.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -604,6 +614,7 @@ version = "0.1.0"
 dependencies = [
  "anchor-lang",
  "anchor-spl",
+ "brine-tree",
  "svm_merkle_tree",
 ]
 

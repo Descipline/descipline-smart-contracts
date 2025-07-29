@@ -1,0 +1,34 @@
+import wallet from "/home/fc/.config/solana/id.json"
+import { createUmi } from "@metaplex-foundation/umi-bundle-defaults"
+import { createGenericFile, createSignerFromKeypair, signerIdentity } from "@metaplex-foundation/umi"
+import { irysUploader } from "@metaplex-foundation/umi-uploader-irys"
+import { readFile } from "fs/promises"
+
+// Create a devnet connection
+const umi = createUmi('https://api.devnet.solana.com');
+
+let keypair = umi.eddsa.createKeypairFromSecretKey(new Uint8Array(wallet));
+const signer = createSignerFromKeypair(umi, keypair);
+
+umi.use(irysUploader());
+umi.use(signerIdentity(signer));
+
+(async () => {
+    try {
+        //1. Load image
+        const txt = await readFile("data/input/winner_list.txt");
+        //2. Convert image to generic file.
+        const genericFile = createGenericFile(txt, "winner_list.txt", {
+            contentType: "txt",
+        });
+        //3. Upload image
+        const [myUri] = await umi.uploader.upload([genericFile]);
+        
+        console.log("Your txt URI: ", myUri); // https://gateway.irys.xyz/25gPAZdcfcSx9mkNSFAXJDUDiExJRJAPrAMW3LpT2F2a
+        const vec = new TextEncoder().encode(myUri); // Uint8Array
+        console.log(vec);
+    }
+    catch(error) {
+        console.log("Oops.. Something went wrong", error);
+    }
+})();

@@ -20,5 +20,6 @@ idl-build = ["anchor-lang/idl-build", "anchor-spl/idl-build"]
 [dependencies]
 anchor-lang = { version = "0.31.1", features = ["init-if-needed"] }
 anchor-spl = { version = "0.31.1", features = ["token"]}
+brine-tree = "0.5.4"
 svm_merkle_tree = "0.1.0"
 
