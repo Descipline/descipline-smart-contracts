@@ -76,38 +76,59 @@ impl AttestationInterface {
         Ok(())
     }
     
-    pub fn verify_layout(&self, layout: Vec<u8>) -> Result<()> {
+    pub fn verify_layout_and_parse(&self, layout: Vec<u8>) -> Result<Vec<Vec<u8>>> {
         // Iterate over the data and ensure there are no overflows.
         // If we do not overflow and match with the end of the data,
         // then we can assume the data is valid for the schema.
         let mut data_offset = 0;
+        let mut parsed_fields = Vec::new();
+
         for data_type in layout {
             let schema_data_type: SchemaDataTypes = data_type.into();
             match schema_data_type {
                 // u8
-                SchemaDataTypes::U8 => data_offset += 1,
+                SchemaDataTypes::U8 => {
+                    if data_offset + 1 > self.data.len() {
+                        return Err(AttestationError::InvalidAttestationData.into());
+                    }
+                    let val = vec![self.data[data_offset]];
+                    parsed_fields.push(val);
+                    data_offset += 1;
+                }
 
                 // Vec<u8> -> Vec<u128>
                 SchemaDataTypes::VecU8 => {
-                    data_offset += get_size_of_vec(data_offset, 1, &self.data)
+                    // get length of vector from your helper
+                    let vec_size = get_size_of_vec(data_offset, 1, &self.data);
+                    if data_offset + vec_size > self.data.len() {
+                        return Err(AttestationError::InvalidAttestationData.into());
+                    }
+                    let vec_data = self.data[data_offset..data_offset + vec_size].to_vec();
+                    parsed_fields.push(vec_data);
+                    data_offset += vec_size;
                 }
             }
-
-            // Check data size at end of each iteration and error if offset exceeds the data length.
-            if data_offset > self.data.len() {
-                return Err(AttestationError::InvalidAttestationData.into());
-            }
         }
+
         if data_offset != self.data.len() {
             return Err(AttestationError::InvalidAttestationData.into());
         }
+        Ok(parsed_fields)
+    }
+
+    /// Verify signer is authorized
+    pub fn verify_signers(&self, authorized_signers: &[Pubkey]) -> Result<()> {
+        require!(
+            authorized_signers.contains(&self.signer),
+            AttestationError::UnauthorizedSigners
+        );
         Ok(())
     }
 
     /// Verify signer is authorized
-    pub fn verify_signer(&self, authorized_signers: &[Pubkey]) -> Result<()> {
+    pub fn verify_signer(&self, authorized_signer: &Pubkey) -> Result<()> {
         require!(
-            authorized_signers.contains(&self.signer),
+            authorized_signer == &self.signer,
             AttestationError::UnauthorizedSigner
         );
         Ok(())

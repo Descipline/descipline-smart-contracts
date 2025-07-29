@@ -10,10 +10,9 @@ pub mod utils;
 use anchor_lang::prelude::*;
 pub use instructions::*;
 pub use constants::*;
-pub use errors::*;
 pub use utils::*;
 
-declare_id!("EDQPhoxuBdRmcQhCAtTxVcbqrErmR9WgtsQF3z3BLW9M");
+declare_id!("HHviGr7n1GBLvSf51pjrPpXtxzkJCNghioR5cCMELskS");
 
 #[program]
 pub mod descipline {
@@ -49,6 +48,12 @@ pub mod descipline {
 
     pub fn stake(ctx: Context<Stake>) -> Result<()> {
         ctx.accounts.stake(&ctx.bumps)?;
+        
+        Ok(())
+    }
+
+    pub fn resolve(ctx: Context<Resolve>) -> Result<()> {
+        ctx.accounts.resolve(&ctx.bumps)?;
         
         Ok(())
     }

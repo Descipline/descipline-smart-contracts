@@ -55,7 +55,7 @@ impl<'info> Stake<'info> {
     bumps: &StakeBumps
   ) -> Result<()> {
     // before stake endtime
-    require!(Clock::get()?.unix_timestamp < self.challenge.stake_end_at, StakeError::StakeEnded);
+    // require!(Clock::get()?.unix_timestamp < self.challenge.stake_end_at, StakeError::StakeEnded);
     // msg!("challenge amount is: {} {}", self.challenger_ata.amount, self.challenge.stake_amount);
     // assert!(false, "early revert");
     // check token balance >= required

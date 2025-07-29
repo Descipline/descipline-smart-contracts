@@ -17,6 +17,9 @@ pub enum AttestationError {
     #[msg("Unauthorized signer")]
     UnauthorizedSigner,
 
+    #[msg("Unauthorized signers")]
+    UnauthorizedSigners,
+
     #[msg("Invalid Discriminator")]
     InvalidAccountData,
 } 

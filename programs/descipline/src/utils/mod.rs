@@ -1,3 +1,3 @@
-pub mod sas_verifier;
+pub mod merkle_verifier;
 
-pub use sas_verifier::*; 
+pub use merkle_verifier::*; 
