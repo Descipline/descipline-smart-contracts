@@ -6,7 +6,8 @@
     "update:programid": "bash ./scripts/update_program_id.sh",
     "sas-demo:standard": "ts-node scripts/sas-standard-gill-demo.ts",
     "test:sb": "anchor test --skip-build",
-    "test:sbsd": "anchor test --skip-build --skip-deploy"
+    "test:sbsd": "anchor test --skip-build --skip-deploy",
+    "create-merkle-proof": "cd scripts/brine_tree && cargo run"
   },
   "dependencies": {
     "@coral-xyz/anchor": "^0.31.1",
