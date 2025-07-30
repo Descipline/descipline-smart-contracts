@@ -5,12 +5,10 @@ pub mod state;
 pub mod interfaces;
 pub mod constants;
 pub mod errors;
-pub mod utils;
 
 use anchor_lang::prelude::*;
 pub use instructions::*;
 pub use constants::*;
-pub use utils::*;
 
 declare_id!("HHviGr7n1GBLvSf51pjrPpXtxzkJCNghioR5cCMELskS");
 
@@ -54,6 +52,12 @@ pub mod descipline {
 
     pub fn resolve(ctx: Context<Resolve>) -> Result<()> {
         ctx.accounts.resolve(&ctx.bumps)?;
+        
+        Ok(())
+    }
+
+    pub fn claim(ctx: Context<Claim>, proof: Vec<Vec<u8>>) -> Result<()> {
+        ctx.accounts.claim(proof)?;
         
         Ok(())
     }

@@ -5,6 +5,7 @@ pub mod credential;
 pub mod attestation;
 pub mod stake;
 pub mod resolve;
+pub mod claim;
 
 pub use challenge::*;
 pub use schema::*;
@@ -13,3 +14,4 @@ pub use credential::*;
 pub use attestation::*; 
 pub use stake::*;
 pub use resolve::*;
+pub use claim::*;
