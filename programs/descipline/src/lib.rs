@@ -56,8 +56,8 @@ pub mod descipline {
         Ok(())
     }
 
-    pub fn claim(ctx: Context<Claim>, proof: Vec<Vec<u8>>) -> Result<()> {
-        ctx.accounts.claim(proof)?;
+    pub fn claim(ctx: Context<Claim>, proof: Vec<u8>, index: u8) -> Result<()> {
+        ctx.accounts.claim(proof, index)?;
         
         Ok(())
     }

@@ -5,6 +5,10 @@ use anchor_spl::token::{
     TransferChecked,
 };
 
+use svm_merkle_tree::{HashingAlgorithm, MerkleProof};
+
+use crate::errors::ClaimError;
+
 // Transfer tokens from one account to another
 // If transferring from a token account owned by a PDA, owning_pda_seeds must be provided.
 pub fn transfer_tokens<'info>(
@@ -67,3 +71,23 @@ pub fn close_token_account<'info>(
         CpiContext::new(token_program.to_account_info(), close_accounts)
     })
 }
+
+pub fn verify_address(
+    address: Pubkey, 
+    hashes: Vec<u8>, 
+    index: u8,
+    merkle_root: [u8; 32]
+  ) -> Result<bool> {
+    let leaf = address.to_bytes().to_vec();
+    let merkle_proof = MerkleProof::new(
+        HashingAlgorithm::Keccak,
+        32,
+        index as u32,
+        hashes,
+    );
+
+    let computed_root = merkle_proof.merklize(&leaf)
+        .map_err(|_| ClaimError::NotInWhitelist)?;
+
+    Ok(computed_root.eq(&merkle_root))
+  }

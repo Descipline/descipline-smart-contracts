@@ -1,5 +1,4 @@
 use anchor_lang::prelude::*;
-// use brine_tree::{Leaf, BrineTreeError, verify};
 
 use crate::{
     state::{Challenge, Resolution}, 

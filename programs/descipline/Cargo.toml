@@ -18,9 +18,6 @@ idl-build = ["anchor-lang/idl-build", "anchor-spl/idl-build"]
 
 
 [dependencies]
-anchor-lang = { version = "0.31.1", features = ["init-if-needed"] }
-anchor-spl = { version = "0.31.1", features = ["token"]}
-brine-tree = "0.5.4"
-svm_merkle_tree = "0.1.0"
-bs58 = "0.5"  
-
+anchor-lang = { version = "0.30.1", features = ["init-if-needed"] }
+anchor-spl = { version = "0.30.1", features = ["token"]}
+svm-merkle-tree = { git = "https://github.com/deanmlittle/svm-merkle-tree.git" }

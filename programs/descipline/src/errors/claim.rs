@@ -7,4 +7,7 @@ pub enum ClaimError {
 
     #[msg("Claim Failed")]
     ClaimFailed,
+
+    #[msg("Not In Whitelist")]
+    NotInWhitelist,
 }

@@ -1,7 +1,6 @@
 use anchor_lang::prelude::*;
 use anchor_spl::{associated_token::AssociatedToken, token::{Mint, Token, TokenAccount}};
-use brine_tree::{Leaf, verify};
-use bs58;
+
 
 use crate::{
     state::{Challenge, Receipt, Resolution}, 
@@ -11,7 +10,7 @@ use crate::{
     // utils::{PinocchioVerifier, SchemaValidator}
 };
 
-use super::shared::{transfer_tokens};
+use super::shared::{transfer_tokens, verify_address};
 
 #[derive(Accounts)]
 pub struct Claim<'info> {
@@ -50,7 +49,7 @@ pub struct Claim<'info> {
     mut,
     close = winner,
     seeds = [b"receipt", challenge.key().as_ref(), winner.key().as_ref()],
-    bump
+    bump = receipt.bump
   )]
   pub receipt: Account<'info, Receipt>,
 
@@ -63,31 +62,29 @@ pub struct Claim<'info> {
 impl<'info> Claim<'info> {
   pub fn claim(
     &mut self,
-    proof: Vec<Vec<u8>>
+    proof: Vec<u8>, 
+    index: u8
   ) -> Result<()> {
     // time lock
     // require!(Clock::get()?.unix_timestamp > self.challenge.claim_start_from, ClaimError::ClaimNotStart);
-    let proof_vec: Vec<[u8; 32]> = proof.into_iter()
-    .map(|item| {
-      let arr: [u8; 32] = item.as_slice().try_into().unwrap(); // safe after length check
-      arr
-    })
-    .collect();
     // verify merkle proof
-    let root = self.resolution.root_hash;
-    // Add as leaf
-    let leaf = Leaf::new(&[self.winner.key().to_bytes().as_ref()]);
+    let merkle_root = self.resolution.root_hash;
 
-    msg!("before verify");
-    verify(root, &proof_vec, leaf);
-    msg!("verify finished");
+    verify_address(
+      self.winner.key(),
+      proof,
+      index,
+      merkle_root
+    )?;
 
     let amount = self.vault.amount.checked_div(self.resolution.winner_notclaim_count as u64).unwrap();
     let signers_seeds = &[
       b"challenge", 
       self.challenge.initiator.as_ref(), 
-      self.challenge.name.as_str().as_bytes()
+      self.challenge.name.as_str().as_bytes(),
+      &[self.challenge.bump]
     ];
+
     transfer_tokens(
       &self.vault,
       &self.winner_ata,

@@ -76,6 +76,7 @@ impl<'info> CreateChallenge<'info> {
 
     require!(credential.authorized_signers.len() as u8 == ATTESTOR_NUMBER, CredentialError::TooManySigners);
     let attestor = credential.authorized_signers[0]; // simply only allow one signer
+    require!(attestor == self.credential_authority.signer || attestor == self.challenge.initiator, GeneralError::NotAllowedAttestor);
 
     self.challenge.set_inner(
       Challenge {

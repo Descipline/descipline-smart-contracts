@@ -7,4 +7,7 @@ pub enum GeneralError {
 
     #[msg("Invalid Credential Authority")]
     InvalidCredentialAuth,
+
+    #[msg("Not Allowed Attestor")]
+    NotAllowedAttestor
 } 
