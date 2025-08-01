@@ -1,3 +1,4 @@
+import { bs58 } from "@coral-xyz/anchor/dist/cjs/utils/bytes";
 import {
     getCreateCredentialInstruction,
     getCreateSchemaInstruction,
@@ -30,6 +31,7 @@ import {
 import {
     estimateComputeUnitLimitFactory
 } from "gill/programs";
+import { PublicKey } from "@solana/web3.js";
 import { createKeyPairSignerFromBytes } from '@solana/signers';
 import fs from 'fs';
 // import * as utils from "../tests/utils/utils";
@@ -49,18 +51,24 @@ function load_merkle_proof(FilePath="data/output/winner_list_proofs.json"): [num
 const MERKLE_ROOT = load_merkle_proof()[0]
 const WINNER_LIST_URI = "https://gateway.irys.xyz/GKZg8NzEdPsjw9hB1zkYUbXqjYRqVbhKoXxi6KxrLPDb"
 
+let credentialPda = "3AxXk5xXwm8gJWsyyKshjgtXFC2GLzFreX6refrBmL9b" as Address;
+let schemaPda = "CHtaC8wHRjjdDTcq8qFhVEWewqfqGZHYqUwAmXbKKGQr" as Address;
+/////
+let challengePda = "GmjPvaAfmW8XkhcKvygWnL1WM2JUxeSN5upEK8Yg6Yn2";
+
 const CONFIG = {
     CLUSTER_OR_RPC: 'devnet',
     CREDENTIAL_NAME: 'OFFICIAL-AUTHORITY',
-    SCHEMA_NAME: 'MERKLEP-ROOF-SCHEMA',
-    SCHEMA_LAYOUT: Buffer.from([13, 0, 13]),
-    SCHEMA_FIELDS: ["merkle_root", "winner_count", "winner_list_uri"],
+    SCHEMA_NAME: 'OFFICIAL-PROOF-SCHEMA',
+    SCHEMA_LAYOUT: Buffer.from([13, 13, 0, 13]),
+    SCHEMA_FIELDS: ["challenge", "merkle_root", "winner_count", "winner_list_uri"],
     SCHEMA_VERSION: 1,
     SCHEMA_DESCRIPTION: 'Challenge schema for merkle proof',
     ATTESTATION_DATA: {
+        challenge: Buffer.from((new PublicKey(challengePda)).toBytes()),
         merkle_root: Buffer.from(MERKLE_ROOT),
         winner_count: 2,
-        winner_list_uri: Buffer.from(WINNER_LIST_URI, "utf-8"), // 
+        winner_list_uri: Buffer.from(WINNER_LIST_URI, "utf-8"), 
     },
     ATTESTATION_EXPIRY_DAYS: 365
 };
@@ -177,44 +185,44 @@ async function main() {
     const { payer, authorizedSigner1, authorizedSigner2, issuer, testUser } = await setupWallets(client);
  
     // Step 2: Create Credential
-    console.log("\n2. Creating Credential...");
-    const [credentialPda] = await deriveCredentialPda({
-        authority: issuer.address,
-        name: CONFIG.CREDENTIAL_NAME
-    });
+    // console.log("\n2. Creating Credential...");
+    // [credentialPda] = await deriveCredentialPda({
+    //     authority: issuer.address,
+    //     name: CONFIG.CREDENTIAL_NAME
+    // });
  
-    const createCredentialInstruction = getCreateCredentialInstruction({
-        payer,
-        credential: credentialPda,
-        authority: issuer,
-        name: CONFIG.CREDENTIAL_NAME,
-        signers: [authorizedSigner1.address]
-    });
+    // const createCredentialInstruction = getCreateCredentialInstruction({
+    //     payer,
+    //     credential: credentialPda,
+    //     authority: issuer,
+    //     name: CONFIG.CREDENTIAL_NAME,
+    //     signers: [authorizedSigner1.address]
+    // });
  
-    await sendAndConfirmInstructions(client, payer, [createCredentialInstruction], 'Credential created');
-    console.log(`    - Credential PDA: ${credentialPda}`); 
- 
+    // await sendAndConfirmInstructions(client, payer, [createCredentialInstruction], 'Credential created');
+    // console.log(`    - Credential PDA: ${credentialPda}`); 
+    
     // Step 3: Create Schema
-    console.log("\n3.  Creating Schema...");
-    const [schemaPda] = await deriveSchemaPda({
-        credential: credentialPda,
-        name: CONFIG.SCHEMA_NAME,
-        version: CONFIG.SCHEMA_VERSION
-    });
+    // console.log("\n3.  Creating Schema...");
+    // [schemaPda] = await deriveSchemaPda({
+    //     credential: credentialPda,
+    //     name: CONFIG.SCHEMA_NAME,
+    //     version: CONFIG.SCHEMA_VERSION
+    // });
  
-    const createSchemaInstruction = getCreateSchemaInstruction({
-        authority: issuer,
-        payer,
-        name: CONFIG.SCHEMA_NAME,
-        credential: credentialPda,
-        description: CONFIG.SCHEMA_DESCRIPTION,
-        fieldNames: CONFIG.SCHEMA_FIELDS,
-        schema: schemaPda,
-        layout: CONFIG.SCHEMA_LAYOUT,
-    });
+    // const createSchemaInstruction = getCreateSchemaInstruction({
+    //     authority: issuer,
+    //     payer,
+    //     name: CONFIG.SCHEMA_NAME,
+    //     credential: credentialPda,
+    //     description: CONFIG.SCHEMA_DESCRIPTION,
+    //     fieldNames: CONFIG.SCHEMA_FIELDS,
+    //     schema: schemaPda,
+    //     layout: CONFIG.SCHEMA_LAYOUT,
+    // });
  
-    await sendAndConfirmInstructions(client, payer, [createSchemaInstruction], 'Schema created');
-    console.log(`    - Schema PDA: ${schemaPda}`); 
+    // await sendAndConfirmInstructions(client, payer, [createSchemaInstruction], 'Schema created');
+    // console.log(`    - Schema PDA: ${schemaPda}`); 
  
     // Step 4: Create Attestation
     console.log("\n4. Creating Attestation...");
@@ -294,15 +302,9 @@ main()
     });
 
 // 1. Setting up wallets and funding payer...
+// - Schema created - Signature: 2TU2LqQ6DRve2xvUqzsTMgu6BWeHRJvCVE4Tymh3LpYkGTpZY5FGAzg1iypE4jekJv5xjzH6ct5kvgTfRun4mPfZ
+// - Schema PDA: 4FS8mRQBUaUTsKwf4c8gqTx9RquGmJrR4Ky6Z5d9RGRj
 
-// 2. Creating Credential...
-//     - Credential created - Signature: 3Dv89EZs5g9v4RfkzSC5ftC7XYii9Ak6FEkAhwYGoExpwy6KUervaKT7AssnfQK4W78KEZxuX3W13DeWssj1yzxG
-//     - Credential PDA: J36gtZNwrE16V7yjGSamtyWQhwQZNikZEjRkX7dTNUtk
-
-// 3.  Creating Schema...
-//     - Schema created - Signature: 22pXugZiPaYU28FvagvfeaTTLRLpBkVeym4Wz7khpoHPdQ17QJ8TCBPFgFRYDayUA3wRcZywCnFUs9Ub6syERPwh
-//     - Schema PDA: pMGxkCNXMzzzHHirVe9Px1QnrNSq4qFM8rSZ3ajwLam
-
-// 4. Creating Attestation...
-//     - Attestation created - Signature: 3b1U9D3C1k3xbe6mNc38SG5uvgsKqTQRZCZBR4P2F19pdQi9fYqzXFhd173qJCLcURfLBLeDfu6ujDUvFmja9mwK
-//     - Attestation PDA: EVVDFrUPMLLvNbXCSeWRpmw3BEfEC2rGsMmYwHDMVUuQ
+// 2. Creating Attestation...
+//     - Attestation created - Signature: 41VN88HCxRJ7uZD67jEDn2i745sBkbB5R683FqiSx4U8XmNDX45PYzrVMoRC2mwvCYYsDJpQkhutgmneLZnpjTAx
+//     - Attestation PDA: 7h2PyWrjDUMTJ9JZrASJVXQcM3WyJeCsbeTR89bScFba
