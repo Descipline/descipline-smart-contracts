@@ -10,7 +10,7 @@ use anchor_lang::prelude::*;
 pub use instructions::*;
 pub use constants::*;
 
-declare_id!("HHviGr7n1GBLvSf51pjrPpXtxzkJCNghioR5cCMELskS");
+declare_id!("5how19SLnecRwk7hQBrEKU3bF8KwH3Z6vXUDiwGssFFc");
 
 #[program]
 pub mod descipline {
@@ -58,6 +58,12 @@ pub mod descipline {
 
     pub fn claim(ctx: Context<Claim>, proof: Vec<u8>, index: u8) -> Result<()> {
         ctx.accounts.claim(proof, index)?;
+        
+        Ok(())
+    }
+
+    pub fn claim_and_close(ctx: Context<ClaimAndClose>, proof: Vec<u8>, index: u8) -> Result<()> {
+        ctx.accounts.claim_and_close(proof, index)?;
         
         Ok(())
     }

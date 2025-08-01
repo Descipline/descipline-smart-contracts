@@ -32,68 +32,46 @@ import {
 } from "gill/programs";
 import { createKeyPairSignerFromBytes } from '@solana/signers';
 import fs from 'fs';
- 
+// import * as utils from "../tests/utils/utils";
+
+function load_merkle_proof(FilePath="data/output/winner_list_proofs.json"): [number[], Record<string, [number, Buffer<ArrayBuffer>]>] {
+    // Read and parse the file
+    const rawData = fs.readFileSync(FilePath, "utf-8");
+    const parsed = JSON.parse(rawData);
+  
+    // Extract Merkle root and proof map
+    const merkleRoot: number[] = parsed.merkleRoot;
+    const proofMap:Record<string, [number, Buffer<ArrayBuffer>]> = parsed.proofMap;
+  
+    return [merkleRoot, proofMap];
+}
+
+const MERKLE_ROOT = load_merkle_proof()[0]
+const WINNER_LIST_URI = "https://gateway.irys.xyz/GKZg8NzEdPsjw9hB1zkYUbXqjYRqVbhKoXxi6KxrLPDb"
+
 const CONFIG = {
     CLUSTER_OR_RPC: 'devnet',
-    CREDENTIAL_NAME: 'TEST-CHALLENGE3',
-    SCHEMA_NAME: 'TEST-CHALLENGE3',
+    CREDENTIAL_NAME: 'OFFICIAL-AUTHORITY',
+    SCHEMA_NAME: 'MERKLEP-ROOF-SCHEMA',
     SCHEMA_LAYOUT: Buffer.from([13, 0, 13]),
     SCHEMA_FIELDS: ["merkle_root", "winner_count", "winner_list_uri"],
     SCHEMA_VERSION: 1,
-    SCHEMA_DESCRIPTION: 'Challenge schema for testing',
+    SCHEMA_DESCRIPTION: 'Challenge schema for merkle proof',
     ATTESTATION_DATA: {
-        merkle_root: Buffer.from([
-            186,
-            152,
-            231,
-            157,
-            94,
-            195,
-            58,
-            216,
-            158,
-            108,
-            16,
-            132,
-            28,
-            192,
-            26,
-            132,
-            250,
-            128,
-            237,
-            34,
-            77,
-            214,
-            155,
-            75,
-            125,
-            28,
-            225,
-            176,
-            191,
-            173,
-            6,
-            33
-          ]),
+        merkle_root: Buffer.from(MERKLE_ROOT),
         winner_count: 2,
-        winner_list_uri: Buffer.from([
-            104, 116, 116, 112, 115,  58,  47,  47, 103,  97, 116, 101,
-            119,  97, 121,  46, 105, 114, 121, 115,  46, 120, 121, 122,
-             47,  71,  75,  90, 103,  56,  78, 122,  69, 100,  80, 115,
-            106, 119,  57, 104,  66,  49, 122, 107,  89,  85,  98,  88,
-            113, 106,  89,  82, 113,  86,  98, 104,  75, 111,  88, 120,
-            105,  54,  75, 120, 114,  76,  80,  68,  98
-          ]), // https://gateway.irys.xyz/GKZg8NzEdPsjw9hB1zkYUbXqjYRqVbhKoXxi6KxrLPDb
+        winner_list_uri: Buffer.from(WINNER_LIST_URI, "utf-8"), // 
     },
     ATTESTATION_EXPIRY_DAYS: 365
 };
+
+const AIRDROP_SWITCH_ON = false;
 
 async function setupWallets(client: SolanaClient) {
     try {
          
         // Get bytes from local keypair file.
-        const keypairFile = fs.readFileSync('/home/fc/.config/solana/id_1.json');
+        const keypairFile = fs.readFileSync('/home/fc/.config/solana/id.json');
         const keypairBytes = new Uint8Array(JSON.parse(keypairFile.toString()));
   
         // Create a KeyPairSigner from the bytes.
@@ -102,15 +80,18 @@ async function setupWallets(client: SolanaClient) {
         const authorizedSigner2 = await generateKeyPairSigner();
         const issuer = payer;
         const testUser = await generateKeyPairSigner();
- 
-        // const airdrop = airdropFactory({ rpc: client.rpc, rpcSubscriptions: client.rpcSubscriptions });
-        // const airdropTx: Signature = await airdrop({
-        //     commitment: 'processed',
-        //     lamports: lamports(BigInt(1_000_000_000)),
-        //     recipientAddress: payer.address
-        // });
- 
-        // console.log(`    - Airdrop completed: ${airdropTx}`);
+
+        if (AIRDROP_SWITCH_ON) {
+            const airdrop = airdropFactory({ rpc: client.rpc, rpcSubscriptions: client.rpcSubscriptions });
+            const airdropTx: Signature = await airdrop({
+                commitment: 'processed',
+                lamports: lamports(BigInt(1_000_000_000)),
+                recipientAddress: payer.address
+            });
+    
+            console.log(`    - Airdrop completed: ${airdropTx}`);
+        }
+
         return { payer, authorizedSigner1, authorizedSigner2, issuer, testUser };
     } catch (error) {
         throw new Error(`Failed to setup wallets: ${error instanceof Error ? error.message : 'Unknown error'}`);
@@ -207,7 +188,7 @@ async function main() {
         credential: credentialPda,
         authority: issuer,
         name: CONFIG.CREDENTIAL_NAME,
-        signers: [authorizedSigner1.address, authorizedSigner2.address]
+        signers: [authorizedSigner1.address]
     });
  
     await sendAndConfirmInstructions(client, payer, [createCredentialInstruction], 'Credential created');
@@ -246,7 +227,7 @@ async function main() {
     const schema = await fetchSchema(client.rpc, schemaPda);
     const expiryTimestamp = Math.floor(Date.now() / 1000) + (CONFIG.ATTESTATION_EXPIRY_DAYS * 24 * 60 * 60);
  
-    const createAttestationInstruction = await getCreateAttestationInstruction({
+    const createAttestationInstruction = getCreateAttestationInstruction({
         payer,
         authority: authorizedSigner1,
         credential: credentialPda,
@@ -260,16 +241,16 @@ async function main() {
     await sendAndConfirmInstructions(client, payer, [createAttestationInstruction], 'Attestation created');
     console.log(`    - Attestation PDA: ${attestationPda}`); 
  
-    // Step 5: Update Authorized Signers
-    console.log("\n5. Updating Authorized Signers...");
-    const changeAuthSignersInstruction = await getChangeAuthorizedSignersInstruction({
-        payer,
-        authority: issuer,
-        credential: credentialPda,
-        signers: [authorizedSigner1.address]
-    });
+    // // Step 5: Update Authorized Signers
+    // console.log("\n5. Updating Authorized Signers...");
+    // const changeAuthSignersInstruction = getChangeAuthorizedSignersInstruction({
+    //     payer,
+    //     authority: issuer,
+    //     credential: credentialPda,
+    //     signers: [authorizedSigner1.address]
+    // });
  
-    await sendAndConfirmInstructions(client, payer, [changeAuthSignersInstruction], 'Authorized signers updated'); 
+    // await sendAndConfirmInstructions(client, payer, [changeAuthSignersInstruction], 'Authorized signers updated'); 
  
     // // Step 6: Verify Attestations
     // console.log("\n6. Verifying Attestations...");
@@ -311,3 +292,17 @@ main()
         console.error("❌ Demo failed:", error);
         process.exit(1);
     });
+
+// 1. Setting up wallets and funding payer...
+
+// 2. Creating Credential...
+//     - Credential created - Signature: 3Dv89EZs5g9v4RfkzSC5ftC7XYii9Ak6FEkAhwYGoExpwy6KUervaKT7AssnfQK4W78KEZxuX3W13DeWssj1yzxG
+//     - Credential PDA: J36gtZNwrE16V7yjGSamtyWQhwQZNikZEjRkX7dTNUtk
+
+// 3.  Creating Schema...
+//     - Schema created - Signature: 22pXugZiPaYU28FvagvfeaTTLRLpBkVeym4Wz7khpoHPdQ17QJ8TCBPFgFRYDayUA3wRcZywCnFUs9Ub6syERPwh
+//     - Schema PDA: pMGxkCNXMzzzHHirVe9Px1QnrNSq4qFM8rSZ3ajwLam
+
+// 4. Creating Attestation...
+//     - Attestation created - Signature: 3b1U9D3C1k3xbe6mNc38SG5uvgsKqTQRZCZBR4P2F19pdQi9fYqzXFhd173qJCLcURfLBLeDfu6ujDUvFmja9mwK
+//     - Attestation PDA: EVVDFrUPMLLvNbXCSeWRpmw3BEfEC2rGsMmYwHDMVUuQ

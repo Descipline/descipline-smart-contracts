@@ -66,7 +66,7 @@ impl<'info> CreateChallenge<'info> {
     let schema = SchemaInterface::new(&schema_data)?;
 
     // Verify schema name matches challenge name
-    schema.verify_name(&name)?;
+    schema.verify_name()?;
     schema.verify_credential(self.credential.key())?;
     
     // Extract credential

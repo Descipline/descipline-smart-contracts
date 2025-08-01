@@ -1,5 +1,5 @@
 use anchor_lang::prelude::*;
-use crate::{constants::Discriminators, errors::SchemaError};
+use crate::{constants::{Discriminators, sas::SCHEMA_NAME}, errors::SchemaError};
 
 /// Interface for loading Pinocchio Schema account data
 pub struct SchemaInterface {
@@ -64,9 +64,9 @@ impl SchemaInterface {
     }
     
     /// Verify that schema name matches challenge name
-    pub fn verify_name(&self, challenge_name: &str) -> Result<()> {
+    pub fn verify_name(&self) -> Result<()> {
         require!(
-            self.name == challenge_name,
+            self.name == SCHEMA_NAME,
             SchemaError::NameMismatch
         );
         Ok(())

@@ -10,10 +10,10 @@ use crate::{
     // utils::{PinocchioVerifier, SchemaValidator}
 };
 
-use super::shared::{transfer_tokens, verify_address};
+use super::shared::{transfer_tokens, verify_address, close_token_account};
 
 #[derive(Accounts)]
-pub struct Claim<'info> {
+pub struct ClaimAndClose<'info> {
   #[account(mut)]
   pub winner: Signer<'info>,
 
@@ -33,6 +33,9 @@ pub struct Claim<'info> {
   pub vault: Account<'info, TokenAccount>,
 
   #[account(
+    mut,
+    close = initiator,
+    has_one = initiator,
     seeds = [b"challenge", challenge.initiator.key().as_ref(), challenge.name.as_str().as_bytes()],
     bump = challenge.bump,
   )]
@@ -40,8 +43,10 @@ pub struct Claim<'info> {
 
   #[account(
     mut,
+    close = attestor,
     seeds = [b"resolution", challenge.key().as_ref()],
     bump = resolution.bump,
+    constraint = attestor.key() == challenge.attestor @ GeneralError::NotAllowedAttestor
   )]
   pub resolution: Account<'info, Resolution>,
 
@@ -53,14 +58,16 @@ pub struct Claim<'info> {
   )]
   pub receipt: Account<'info, Receipt>,
 
+  pub initiator: SystemAccount<'info>,
+  pub attestor: SystemAccount<'info>,
   pub stake_mint: Account<'info, Mint>,
   pub associated_token_program: Program<'info, AssociatedToken>,
   pub token_program: Program<'info, Token>,
   pub system_program: Program<'info, System>,
 }
 
-impl<'info> Claim<'info> {
-  pub fn claim(
+impl<'info> ClaimAndClose<'info> {
+  pub fn claim_and_close(
     &mut self,
     proof: Vec<u8>, 
     index: u8
@@ -68,7 +75,7 @@ impl<'info> Claim<'info> {
     // time lock
     // require!(Clock::get()?.unix_timestamp > self.challenge.claim_start_from, ClaimError::ClaimNotStart);
 
-    require!(self.resolution.winner_notclaim_count > 1, ClaimError::ShouldCloseChallenge);
+    require!(self.resolution.winner_notclaim_count == 1, ClaimError::InvalidCloseChallenge);
     // verify merkle proof
     let merkle_root = self.resolution.root_hash;
 
@@ -79,7 +86,6 @@ impl<'info> Claim<'info> {
       merkle_root
     )?;
 
-    let amount = self.vault.amount.checked_div(self.resolution.winner_notclaim_count as u64).unwrap();
     let signers_seeds = &[
       b"challenge", 
       self.challenge.initiator.as_ref(), 
@@ -90,7 +96,7 @@ impl<'info> Claim<'info> {
     transfer_tokens(
       &self.vault,
       &self.winner_ata,
-      &amount,
+      &self.vault.amount,
       &self.stake_mint,
       &self.challenge.to_account_info(),
       &self.token_program,
@@ -98,8 +104,14 @@ impl<'info> Claim<'info> {
     )
     .map_err(|_| ClaimError::ClaimFailed)?;
 
-  self.resolution.winner_notclaim_count -= 1;
+  close_token_account(
+    &self.vault, 
+    &self.initiator, 
+    &self.challenge.to_account_info(), 
+    &self.token_program,
+    Some(signers_seeds))?;
 
     Ok(())
   }
+
 }
