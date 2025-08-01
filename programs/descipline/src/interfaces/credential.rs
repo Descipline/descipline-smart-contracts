@@ -1,5 +1,5 @@
 use anchor_lang::prelude::*;
-use crate::{constants::Discriminators, errors::CredentialError};
+use crate::{constants::Discriminators, error::DesciplineError};
 
 /// Interface for loading Pinocchio Credential account data
 pub struct CredentialInterface {
@@ -12,13 +12,13 @@ impl CredentialInterface {
     /// Create a new CredentialInterface from account data
     pub fn new(account_data: &[u8]) -> Result<Self> {
         // Check discriminator
-        require!(account_data[0] == Discriminators::Credential as u8, CredentialError::InvalidAccountData);
+        require!(account_data[0] == Discriminators::Credential as u8, DesciplineError::InvalidAccountData);
 
         // for discriminator and authority
         let mut offset = 33;
 
         // Deserialize Pinocchio Credential account based on the provided structure
-        require!(account_data.len() >= 73, CredentialError::InvalidCredentialData);
+        require!(account_data.len() >= 73, DesciplineError::InvalidCredentialData);
         
         // Extract authority (first 32 bytes after discriminator)
         let authority = Pubkey::new_from_array(account_data[1..33].try_into().unwrap());
@@ -33,7 +33,7 @@ impl CredentialInterface {
         // Read name bytes
         let name_bytes = &account_data[offset..offset + name_length];
         let name = String::from_utf8(name_bytes.to_vec())
-            .map_err(|_| CredentialError::InvalidCredentialData)?;
+            .map_err(|_| DesciplineError::InvalidCredentialData)?;
         
         offset += name_length;
 
@@ -45,7 +45,7 @@ impl CredentialInterface {
         offset += 4;
         
         // Read authorized_signers (each Pubkey is 32 bytes)
-        require!(account_data.len() == offset + signers_length * 32, CredentialError::InvalidCredentialData);
+        require!(account_data.len() == offset + signers_length * 32, DesciplineError::InvalidCredentialData);
         
         let mut authorized_signers = Vec::new();
         for i in 0..signers_length {
@@ -66,7 +66,7 @@ impl CredentialInterface {
     pub fn verify_authority(&self, signer: Pubkey) -> Result<()> {
         require!(
             self.authority == signer,
-            CredentialError::InvalidAuthority
+            DesciplineError::InvalidAuthority
         );
         Ok(())
     }
@@ -76,7 +76,7 @@ impl CredentialInterface {
     //     // let expected_layout = vec![13, 0, 13];
     //     require!(
     //         self.layout == expected_layout,
-    //         CredentialError::InvalidLayout
+    //         DesciplineError::InvalidLayout
     //     );
     //     Ok(())
     // }
@@ -85,7 +85,7 @@ impl CredentialInterface {
     pub fn verify_authorized_signer(&self, signer: Pubkey) -> Result<()> {
         require!(
             self.authorized_signers.contains(&signer),
-            CredentialError::UnauthorizedSigner
+            DesciplineError::UnauthorizedSigner
         );
         Ok(())
     }

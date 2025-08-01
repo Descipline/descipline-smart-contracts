@@ -5,7 +5,7 @@ use crate::{
     state::{Challenge, CredentialAuthority}, 
     interfaces::{SchemaInterface, CredentialInterface},
     constants::{TokenAllowed, ATTESTOR_NUMBER}, 
-    errors::{GeneralError, CredentialError},
+    error::DesciplineError,
     // utils::{PinocchioVerifier, SchemaValidator}
 };
 
@@ -20,7 +20,7 @@ pub struct CreateChallenge<'info> {
     payer = initiator,
     associated_token::mint = stake_mint,
     associated_token::authority = challenge,
-    constraint = stake_mint.key() == token_allowed.mint() @ GeneralError::NotAllowedToken
+    constraint = stake_mint.key() == token_allowed.mint() @ DesciplineError::NotAllowedToken
   )]
   pub vault: Account<'info, TokenAccount>,
 
@@ -74,9 +74,9 @@ impl<'info> CreateChallenge<'info> {
     let credential = CredentialInterface::new(&credential_data)?;
     credential.verify_authority(self.credential_authority.signer)?;
 
-    require!(credential.authorized_signers.len() as u8 == ATTESTOR_NUMBER, CredentialError::TooManySigners);
+    require!(credential.authorized_signers.len() as u8 == ATTESTOR_NUMBER, DesciplineError::TooManySigners);
     let attestor = credential.authorized_signers[0]; // simply only allow one signer
-    require!(attestor == self.credential_authority.signer || attestor == self.challenge.initiator, GeneralError::NotAllowedAttestor);
+    require!(attestor == self.credential_authority.signer || attestor == self.challenge.initiator, DesciplineError::InvalidAttestor);
 
     self.challenge.set_inner(
       Challenge {

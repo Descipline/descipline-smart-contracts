@@ -4,7 +4,7 @@ pub mod instructions;
 pub mod state;
 pub mod interfaces;
 pub mod constants;
-pub mod errors;
+pub mod error;
 
 use anchor_lang::prelude::*;
 pub use instructions::*;

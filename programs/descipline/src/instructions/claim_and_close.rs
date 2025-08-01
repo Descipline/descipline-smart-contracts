@@ -6,7 +6,7 @@ use crate::{
     state::{Challenge, Receipt, Resolution}, 
     // interfaces::{SchemaInterface, CredentialInterface},
     // constants::{TokenAllowed, ATTESTOR_NUMBER}, 
-    errors::{GeneralError, ClaimError},
+    error::DesciplineError,
     // utils::{PinocchioVerifier, SchemaValidator}
 };
 
@@ -28,7 +28,7 @@ pub struct ClaimAndClose<'info> {
     mut,
     associated_token::mint = stake_mint,
     associated_token::authority = challenge,
-    constraint = stake_mint.key() == challenge.token_allowed.mint() @ GeneralError::NotAllowedToken
+    constraint = stake_mint.key() == challenge.token_allowed.mint() @ DesciplineError::NotAllowedToken
   )]
   pub vault: Account<'info, TokenAccount>,
 
@@ -46,7 +46,7 @@ pub struct ClaimAndClose<'info> {
     close = attestor,
     seeds = [b"resolution", challenge.key().as_ref()],
     bump = resolution.bump,
-    constraint = attestor.key() == challenge.attestor @ GeneralError::NotAllowedAttestor
+    constraint = attestor.key() == challenge.attestor @ DesciplineError::InvalidAttestor
   )]
   pub resolution: Account<'info, Resolution>,
 
@@ -57,8 +57,10 @@ pub struct ClaimAndClose<'info> {
     bump = receipt.bump
   )]
   pub receipt: Account<'info, Receipt>,
-
+  
+  #[account(mut)]
   pub initiator: SystemAccount<'info>,
+  #[account(mut)]
   pub attestor: SystemAccount<'info>,
   pub stake_mint: Account<'info, Mint>,
   pub associated_token_program: Program<'info, AssociatedToken>,
@@ -73,9 +75,9 @@ impl<'info> ClaimAndClose<'info> {
     index: u8
   ) -> Result<()> {
     // time lock
-    // require!(Clock::get()?.unix_timestamp > self.challenge.claim_start_from, ClaimError::ClaimNotStart);
+    // require!(Clock::get()?.unix_timestamp > self.challenge.claim_start_from, DesciplineError::ClaimNotStart);
 
-    require!(self.resolution.winner_notclaim_count == 1, ClaimError::InvalidCloseChallenge);
+    require!(self.resolution.winner_notclaim_count == 1, DesciplineError::InvalidCloseChallenge);
     // verify merkle proof
     let merkle_root = self.resolution.root_hash;
 
@@ -102,7 +104,7 @@ impl<'info> ClaimAndClose<'info> {
       &self.token_program,
       Some(signers_seeds),
     )
-    .map_err(|_| ClaimError::ClaimFailed)?;
+    .map_err(|_| DesciplineError::ClaimFailed)?;
 
   close_token_account(
     &self.vault, 

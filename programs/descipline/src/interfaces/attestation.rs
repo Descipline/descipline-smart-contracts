@@ -1,5 +1,5 @@
 use anchor_lang::prelude::*;
-use crate::{constants::{Discriminators, SchemaDataTypes}, errors::AttestationError};
+use crate::{constants::{Discriminators, SchemaDataTypes}, error::DesciplineError};
 
 #[inline]
 fn get_size_of_vec(offset: usize, element_size: usize, data: &Vec<u8>) -> usize {
@@ -19,13 +19,13 @@ impl AttestationInterface {
     /// Create a new AttestationInterface from account data
     pub fn new(account_data: &[u8]) -> Result<Self> {
         // Check discriminator
-        require!(account_data[0] == Discriminators::Attestation as u8, AttestationError::InvalidAccountData);
+        require!(account_data[0] == Discriminators::Attestation as u8, DesciplineError::InvalidAccountData);
 
         // for discriminator and nonce and 3 pubkeys
         let mut offset = 97;
 
         // Deserialize Pinocchio Attestation account based on the provided structure
-        require!(account_data.len() > 141, AttestationError::InvalidAttestationData);
+        require!(account_data.len() > 141, DesciplineError::InvalidAttestationData);
         
         // Extract credential (next 32 bytes)
         let credential = Pubkey::new_from_array(account_data[33..65].try_into().unwrap());
@@ -45,7 +45,7 @@ impl AttestationInterface {
         
         offset += data_length;
         
-        require!(account_data.len() == offset + 72, AttestationError::InvalidAttestationData);
+        // require!(account_data.len() == offset + 72, DesciplineError::InvalidAttestationData);
 
         // Extract signer (next 32 bytes)
         let signer = Pubkey::new_from_array(account_data[offset..offset+32].try_into().unwrap());
@@ -62,7 +62,7 @@ impl AttestationInterface {
     pub fn verify_credential(&self, expected_credential: Pubkey) -> Result<()> {
         require!(
             self.credential == expected_credential,
-            AttestationError::CredentialMismatch
+            DesciplineError::CredentialMismatch
         );
         Ok(())
     }
@@ -71,7 +71,7 @@ impl AttestationInterface {
     pub fn verify_schema(&self, expected_schema: Pubkey) -> Result<()> {
         require!(
             self.schema == expected_schema,
-            AttestationError::SchemaMismatch
+            DesciplineError::SchemaMismatch
         );
         Ok(())
     }
@@ -88,8 +88,9 @@ impl AttestationInterface {
             match schema_data_type {
                 // u8
                 SchemaDataTypes::U8 => {
+                    msg!("data offset: {},  self.data: {}", data_offset, self.data.len());
                     if data_offset + 1 > self.data.len() {
-                        return Err(AttestationError::InvalidAttestationData.into());
+                        return Err(DesciplineError::InvalidAttestationData.into());
                     }
                     let val = vec![self.data[data_offset]];
                     parsed_fields.push(val);
@@ -101,7 +102,7 @@ impl AttestationInterface {
                     // get length of vector from your helper
                     let vec_size = get_size_of_vec(data_offset, 1, &self.data);
                     if data_offset + vec_size > self.data.len() {
-                        return Err(AttestationError::InvalidAttestationData.into());
+                        return Err(DesciplineError::InvalidAttestationData.into());
                     }
                     let vec_data = self.data[data_offset..data_offset + vec_size].to_vec();
                     parsed_fields.push(vec_data);
@@ -111,7 +112,7 @@ impl AttestationInterface {
         }
 
         if data_offset != self.data.len() {
-            return Err(AttestationError::InvalidAttestationData.into());
+            return Err(DesciplineError::InvalidAttestationData.into());
         }
         Ok(parsed_fields)
     }
@@ -120,7 +121,7 @@ impl AttestationInterface {
     pub fn verify_signers(&self, authorized_signers: &[Pubkey]) -> Result<()> {
         require!(
             authorized_signers.contains(&self.signer),
-            AttestationError::UnauthorizedSigners
+            DesciplineError::UnauthorizedSigners
         );
         Ok(())
     }
@@ -129,7 +130,7 @@ impl AttestationInterface {
     pub fn verify_signer(&self, authorized_signer: &Pubkey) -> Result<()> {
         require!(
             authorized_signer == &self.signer,
-            AttestationError::UnauthorizedSigner
+            DesciplineError::UnauthorizedSigner
         );
         Ok(())
     }

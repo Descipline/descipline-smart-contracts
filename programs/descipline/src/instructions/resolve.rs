@@ -2,9 +2,9 @@ use anchor_lang::prelude::*;
 
 use crate::{
     state::{Challenge, Resolution}, 
-    interfaces::{AttestationInterface},
-    constants::{SCHEMA_LAY_OUT}, 
-    errors::{ResolveError},
+    interfaces::AttestationInterface,
+    constants::SCHEMA_LAY_OUT, 
+    error::DesciplineError,
 };
 
 
@@ -16,7 +16,7 @@ use crate::{
 pub struct Resolve<'info> {
   #[account(
     mut,
-    constraint = attestor.key() == challenge.attestor.key() @ ResolveError::InvalidAttestor
+    constraint = attestor.key() == challenge.attestor.key() @ DesciplineError::InvalidAttestor
   )]
   pub attestor: Signer<'info>,
 
@@ -54,11 +54,15 @@ impl<'info> Resolve<'info> {
     attestation.verify_signer(&self.attestor.key())?;
     let attestation_fields = attestation.verify_layout_and_parse(SCHEMA_LAY_OUT.to_vec()).unwrap();
 
-    let root_raw_bytes: [u8; 36] = attestation_fields[0].clone().try_into().unwrap();
-    let root_hash: [u8; 32] = root_raw_bytes[4..].try_into().unwrap();// [4..].try_into().unwrap();
+    let mut raw_bytes: [u8; 36] = attestation_fields[0].clone().try_into().unwrap();
+    let challenge_bytes: &[u8] = &raw_bytes[4..];
+    require!(challenge_bytes == self.challenge.key().as_ref(), DesciplineError::ChallengeMismatch);
+    
+    raw_bytes = attestation_fields[1].clone().try_into().unwrap();
+    let root_hash: [u8; 32] = raw_bytes[4..].try_into().unwrap();// [4..].try_into().unwrap();
     // root_hash = root_hash[4:];
-    let winner_count: u8 =  attestation_fields[1][0];
-    let winner_list_uri = attestation_fields[2].clone(); // first 4 bytes are length
+    let winner_count: u8 =  attestation_fields[2][0];
+    let winner_list_uri = attestation_fields[3].clone(); // first 4 bytes are length
 
     // verify(root_hash, );
 

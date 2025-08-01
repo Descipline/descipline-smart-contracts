@@ -1,5 +1,5 @@
 use anchor_lang::prelude::*;
-use crate::{constants::{Discriminators, sas::SCHEMA_NAME}, errors::SchemaError};
+use crate::{constants::{Discriminators, SCHEMA_NAME}, error::DesciplineError};
 
 /// Interface for loading Pinocchio Schema account data
 pub struct SchemaInterface {
@@ -12,13 +12,13 @@ impl SchemaInterface {
     /// Create a new SchemaInterface from account data
     pub fn new(account_data: &[u8]) -> Result<Self> {
         // Check discriminator
-        require!(account_data[0] == Discriminators::Schema as u8, SchemaError::InvalidAccountData);
+        require!(account_data[0] == Discriminators::Schema as u8, DesciplineError::InvalidAccountData);
 
         // for discriminator and credential
         let mut offset = 33;
 
         // Deserialize Pinocchio Schema account based on the provided structure
-        require!(account_data.len() > 51, SchemaError::InvalidSchemaData);
+        require!(account_data.len() > 51, DesciplineError::InvalidSchemaData);
         msg!("schema account data length: {}", account_data.len());
         
         // Extract credential
@@ -34,7 +34,7 @@ impl SchemaInterface {
 
         let name_bytes = &account_data[offset..offset + name_length];
         let name = String::from_utf8(name_bytes.to_vec())
-            .map_err(|_| SchemaError::InvalidSchemaData)?;
+            .map_err(|_| DesciplineError::InvalidSchemaData)?;
         
         offset += name_length;
 
@@ -50,7 +50,7 @@ impl SchemaInterface {
         
         // Read name bytes
         if account_data.len() < offset + 4 + layout_length + 6 {
-            return err!(SchemaError::InvalidSchemaData);
+            return err!(DesciplineError::InvalidSchemaData);
         }
         
         // Read layout bytes
@@ -67,7 +67,7 @@ impl SchemaInterface {
     pub fn verify_name(&self) -> Result<()> {
         require!(
             self.name == SCHEMA_NAME,
-            SchemaError::NameMismatch
+            DesciplineError::NameMismatch
         );
         Ok(())
     }
@@ -76,7 +76,7 @@ impl SchemaInterface {
     pub fn verify_credential(&self, credential: Pubkey) -> Result<()> {
         require!(
             self.credential == credential,
-            SchemaError::InvalidCredential
+            DesciplineError::InvalidCredential
         );
         Ok(())
     }

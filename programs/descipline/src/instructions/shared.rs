@@ -7,7 +7,7 @@ use anchor_spl::token::{
 
 use svm_merkle_tree::{HashingAlgorithm, MerkleProof};
 
-use crate::errors::ClaimError;
+use crate::error::DesciplineError;
 
 // Transfer tokens from one account to another
 // If transferring from a token account owned by a PDA, owning_pda_seeds must be provided.
@@ -87,7 +87,7 @@ pub fn verify_address(
     );
 
     let computed_root = merkle_proof.merklize(&leaf)
-        .map_err(|_| ClaimError::NotInWhitelist)?;
+        .map_err(|_| DesciplineError::NotInWhitelist)?;
 
     Ok(computed_root.eq(&merkle_root))
   }

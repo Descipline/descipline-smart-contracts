@@ -6,7 +6,7 @@ use crate::{
     state::{Challenge, Receipt, Resolution}, 
     // interfaces::{SchemaInterface, CredentialInterface},
     // constants::{TokenAllowed, ATTESTOR_NUMBER}, 
-    errors::{GeneralError, ClaimError},
+    error::DesciplineError,
     // utils::{PinocchioVerifier, SchemaValidator}
 };
 
@@ -28,7 +28,7 @@ pub struct Claim<'info> {
     mut,
     associated_token::mint = stake_mint,
     associated_token::authority = challenge,
-    constraint = stake_mint.key() == challenge.token_allowed.mint() @ GeneralError::NotAllowedToken
+    constraint = stake_mint.key() == challenge.token_allowed.mint() @ DesciplineError::NotAllowedToken
   )]
   pub vault: Account<'info, TokenAccount>,
 
@@ -66,9 +66,9 @@ impl<'info> Claim<'info> {
     index: u8
   ) -> Result<()> {
     // time lock
-    // require!(Clock::get()?.unix_timestamp > self.challenge.claim_start_from, ClaimError::ClaimNotStart);
+    // require!(Clock::get()?.unix_timestamp > self.challenge.claim_start_from, DesciplineError::ClaimNotStart);
 
-    require!(self.resolution.winner_notclaim_count > 1, ClaimError::ShouldCloseChallenge);
+    require!(self.resolution.winner_notclaim_count > 1, DesciplineError::ShouldCloseChallenge);
     // verify merkle proof
     let merkle_root = self.resolution.root_hash;
 
@@ -96,7 +96,7 @@ impl<'info> Claim<'info> {
       &self.token_program,
       Some(signers_seeds),
     )
-    .map_err(|_| ClaimError::ClaimFailed)?;
+    .map_err(|_| DesciplineError::ClaimFailed)?;
 
   self.resolution.winner_notclaim_count -= 1;
 

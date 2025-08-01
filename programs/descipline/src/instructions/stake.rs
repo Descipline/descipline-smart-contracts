@@ -3,7 +3,7 @@ use anchor_spl::{associated_token::AssociatedToken, token::{Mint, Token, TokenAc
 
 use crate::{
     state::{Challenge, Receipt},
-    errors::{GeneralError, StakeError},
+    error::DesciplineError,
 };
 
 use super::shared::{transfer_tokens};
@@ -33,7 +33,7 @@ pub struct Stake<'info> {
     mut,
     associated_token::mint = stake_mint,
     associated_token::authority = challenge,
-    constraint = stake_mint.key() == challenge.token_allowed.mint() @ GeneralError::NotAllowedToken
+    constraint = stake_mint.key() == challenge.token_allowed.mint() @ DesciplineError::NotAllowedToken
   )]
   pub vault: Account<'info, TokenAccount>,
 
@@ -55,11 +55,11 @@ impl<'info> Stake<'info> {
     bumps: &StakeBumps
   ) -> Result<()> {
     // before stake endtime
-    // require!(Clock::get()?.unix_timestamp < self.challenge.stake_end_at, StakeError::StakeEnded);
+    // require!(Clock::get()?.unix_timestamp < self.challenge.stake_end_at, DesciplineError::StakeEnded);
     // msg!("challenge amount is: {} {}", self.challenger_ata.amount, self.challenge.stake_amount);
     // assert!(false, "early revert");
     // check token balance >= required
-    require!( self.challenger_ata.amount >= self.challenge.stake_amount, StakeError::InsufficientToken);
+    require!( self.challenger_ata.amount >= self.challenge.stake_amount, DesciplineError::InsufficientToken);
     
     // transfer token
     transfer_tokens(
@@ -71,7 +71,7 @@ impl<'info> Stake<'info> {
       &self.token_program,
       None,
     )
-    .map_err(|_| StakeError::StakeFailed)?;
+    .map_err(|_| DesciplineError::StakeFailed)?;
 
     // set receipt
     self.receipt.set_inner(
