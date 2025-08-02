@@ -12,7 +12,7 @@
     "codama-idl": "yarn ts-node scripts/codama-idl.ts",
     "manual:build": "anchor build --no-idl && cd programs/descipline/ && RUSTUP_TOOLCHAIN=nightly-2025-04-01 anchor idl build -o ../../target/idl/descipline.json -t ../../target/types/descipline.ts",
     "manual:bd": "yarn manual:build && anchor deploy && yarn codama-idl",
-    "test": "yarn ts-node scripts/test.ts",
+    "test": "yarn ts-node tests/descipline.ts",
     "manual:bd&test": "yarn manual:bd && yarn test"
   },
   "dependencies": {

@@ -1,6 +1,7 @@
 import { Keypair, PublicKey, SystemProgram, LAMPORTS_PER_SOL, Transaction } from "@solana/web3.js";
 import { HashingAlgorithm, MerkleTree, MerkleProof } from "svm-merkle-tree";
 import * as fs from 'fs';
+
 const whitelistFilePath ="data/input/winner_list.txt"
 const outputFilePath = "data/output/winner_list_proofs.json"
 

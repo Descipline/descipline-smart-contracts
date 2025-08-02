@@ -45,7 +45,7 @@ impl AttestationInterface {
         
         offset += data_length;
         
-        // require!(account_data.len() == offset + 72, DesciplineError::InvalidAttestationData);
+        require!(account_data.len() == offset + 72, DesciplineError::InvalidAttestationData);
 
         // Extract signer (next 32 bytes)
         let signer = Pubkey::new_from_array(account_data[offset..offset+32].try_into().unwrap());

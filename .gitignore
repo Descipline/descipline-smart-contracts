@@ -5,6 +5,7 @@ target
 node_modules
 test-ledger
 app
+temp
 
 **/*.rs.bk
 scripts/*.py

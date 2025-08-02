@@ -21,7 +21,7 @@ pub struct Stake<'info> {
   pub challenger_ata: Account<'info, TokenAccount>,
 
   #[account(
-    init,
+    init_if_needed,
     payer = challenger,
     seeds = [b"receipt", challenge.key().as_ref(), challenger.key().as_ref()],
     bump,
