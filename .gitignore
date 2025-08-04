@@ -6,6 +6,9 @@ node_modules
 test-ledger
 app
 temp
+data2
+data/input
+data/output
 
 **/*.rs.bk
 scripts/*.py
