@@ -26,26 +26,75 @@
    - Contract stores challenge data on-chain.  
    - Backend integrates with **Solana Attestation Service** to set credential & schema storage.  
 
-![arc-1](data/images/1-create-challenge.png)
+![1](data/images/1.png)
+
 
 2. **Join Challenge**  
    - Challenger deposits SPL tokens before deadline.  
    - If staking SOL, frontend auto-wraps to wSOL.  
-![arc-2](data/images/2-join-challenge.png)
+
+![2](data/images/2.png)
+
 
 3. **Attestation & Winner Resolution**  
    - At challenge end, attestor signs attestation.  
    - Backend indexes winners, stores results in DB, uploads to Arweave.  
-   - Merkle root of winner list stored on-chain for verification.  
-![arc-3](data/images/3-resolve.png)
+   - Merkle root of winner list stored on-chain for verification.
+
+
+![3](data/images/3.png)
+
 
 4. **Claim Rewards**  
    - Winners submit Merkle proof to claim stake + share of forfeits.
-![arc-4](data/images/4-claim.png)
+
+
+![4](data/images/4.png)
+
 
 ---
 
 ## **📂 Project Structure**
 - [frontend repository](https://github.com/Descipline/descipline-frontend)
+  ```
+  descipline-frontend/
+  │── public/
+  │── src/
+  │── .gitignore
+  │── README.md
+  │── babel.config.js
+  │── jsconfig.json
+  │── package-lock.json
+  │── package.json
+  │── vue.config.js
 
+  ```
 - [smart contracts repository](https://github.com/Descipline/descipline-smart-contracts)
+  - struct
+
+    ```
+    descipline-smart-contracts/
+    │── programs/               # smart contract(s)
+    │   └── descipline/          
+    │       ├── src/             
+    │       ├── Cargo.toml       
+    │       └── Anchor.toml      
+    │
+    │── scripts/                # Helper scripts
+    │── tests/                  # Integration tests
+    │── README.md
+    ```
+  - run
+    ```
+    yarn manual:build
+    anchor deploy
+    yarn codama-idl
+    yarn test
+    ```
+## **🔧 Dev Tools**
+- [gill](https://github.com/DecalLabs/gill)
+- [codama](https://github.com/codama-idl/codama)
+- [svm-merkle-tree](https://github.com/deanmlittle/svm-merkle-tree)
+- [solana-attestation-service](https://solana.com/de/news/solana-attestation-service)
+- [create-solana-dapp](https://github.com/solana-foundation/create-solana-dapp)
+- [anchor escrow](https://github.com/Mobius3-3/escrow/tree/5b8249ecb0c84ee20b4cf4289b33c212905e52b8)
