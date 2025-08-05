@@ -9,6 +9,7 @@ temp
 data2
 data/input
 data/output
+data/authority.json
 
 **/*.rs.bk
 scripts/*.py

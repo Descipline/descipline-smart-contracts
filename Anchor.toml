@@ -5,17 +5,17 @@ resolution = true
 skip-lint = false
 
 [programs.devnet]
-descipline = "5how19SLnecRwk7hQBrEKU3bF8KwH3Z6vXUDiwGssFFc"
+descipline = "2s3weLk9GXoqkbw377YbiQpfQX1eQ6DxUsfHi82WRZLF"
 
 [programs.localnet]
-descipline = "5how19SLnecRwk7hQBrEKU3bF8KwH3Z6vXUDiwGssFFc"
+descipline = "2s3weLk9GXoqkbw377YbiQpfQX1eQ6DxUsfHi82WRZLF"
 
 [registry]
 url = "https://api.apr.dev"
 
 [provider]
 cluster = "Devnet"
-wallet = "/home/fc/.config/solana/id.json"
+wallet = "data/authority.json"
 
 [scripts]
 test = "yarn run ts-mocha -p ./tsconfig.json -t 1000000 tests/**/*.ts"
