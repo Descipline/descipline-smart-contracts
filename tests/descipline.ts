@@ -1,4 +1,6 @@
 import fs from 'fs';
+import { describe, before, it } from "node:test";
+import assert from "node:assert";
 import { bs58 } from "@coral-xyz/anchor/dist/cjs/utils/bytes";
 import { 
   getInitAuthorityInstruction,
@@ -12,6 +14,7 @@ import {
 } from "../descipline-lib";
 
 import { 
+  fetchCredential,
   fetchSchema, 
   fetchAttestation,
   deriveEventAuthorityAddress,
@@ -19,7 +22,7 @@ import {
   SOLANA_ATTESTATION_SERVICE_PROGRAM_ADDRESS,
   deriveAttestationPda,
   getCreateAttestationInstruction,
-  serializeAttestationData
+  serializeAttestationData,
 } from "sas-lib";
 
 import {
@@ -45,6 +48,8 @@ import { resolve } from 'path';
 
 require("dotenv").config();
 
+// help functions
+
 function load_merkle_proof(FilePath = "data/output/winner_list_proofs.json"): [number[], Record<string, [number, Buffer<ArrayBuffer>]>] {
   const rawData = fs.readFileSync(FilePath, "utf-8");
   const parsed = JSON.parse(rawData);
@@ -53,7 +58,7 @@ function load_merkle_proof(FilePath = "data/output/winner_list_proofs.json"): [n
   return [merkleRoot, proofMap];
 }
 
-async function setupWallets(client: SolanaClient, wallet_path = "/home/fc/.config/solana/id.json", airdrop_switch_on = false) {
+async function setupWallets(client: SolanaClient, wallet_path = "data/authority.json", airdrop_switch_on = false) {
   const keypairBytes = new Uint8Array(JSON.parse(fs.readFileSync(wallet_path).toString()));
   const payer = await createKeyPairSignerFromBytes(keypairBytes);
 
@@ -107,14 +112,14 @@ async function sendAndConfirmInstructions(
     throw err;
   }
 }
-
+const IS_INIT = false;
 const [MERKLE_ROOT, MERKLE_PROOFS] = load_merkle_proof()
 const WINNER_LIST_URI = "https://gateway.irys.xyz/GKZg8NzEdPsjw9hB1zkYUbXqjYRqVbhKoXxi6KxrLPDb";
-const CREDENTIAL_PDA = new PublicKey("3AxXk5xXwm8gJWsyyKshjgtXFC2GLzFreX6refrBmL9b");
-const SCHEMA_PDA = new PublicKey("6DUEfJWTitsLSL92wa2TT9SEribipmCqjSEVjUEoMMNJ");
+const CREDENTIAL_PDA = new PublicKey("EuqQv8UZmFUn3ksEDYh4Zes3quSPXv8J5Ctas24N8FmY");
+const SCHEMA_PDA = new PublicKey("6qbJyzaoy7CBgr75gyiLRvPWQ5MTXgxFwNofELXpWgGA");
 const USDC_MINT = new PublicKey("4NQMuSBhVrqTh8FMv5AbHvADVwHSnxrHNERPdAFu5B8p");
 const PROGRAM_ID = new PublicKey(DESCIPLINE_PROGRAM_ADDRESS);
-const CHALLENGE_PDA = "GmjPvaAfmW8XkhcKvygWnL1WM2JUxeSN5upEK8Yg6Yn2";
+const CHALLENGE_NAME = "DESCIP-TEST-CHALLENGE5";
 
 const CONFIG = {
   CLUSTER_OR_RPC: 'devnet',
@@ -124,13 +129,13 @@ const CONFIG = {
   SCHEMA_FIELDS: ["challenge", "merkle_root", "winner_count", "winner_list_uri"],
   SCHEMA_VERSION: 1,
   SCHEMA_DESCRIPTION: 'Challenge schema for merkle proof',
-  ATTESTATION_DATA: {
-      challenge: Buffer.from((new PublicKey(CHALLENGE_PDA)).toBytes()),
-      merkle_root: Buffer.from(MERKLE_ROOT),
-      winner_count: 2,
-      winner_list_uri: Buffer.from(WINNER_LIST_URI, "utf-8"), 
-  },
   ATTESTATION_EXPIRY_DAYS: 365
+};
+let attestation_data =  {
+  challenge: Buffer.from([]), // Buffer.from((new PublicKey(CHALLENGE_PDA)).toBytes()),
+  merkle_root: Buffer.from(MERKLE_ROOT),
+  winner_count: 2,
+  winner_list_uri: Buffer.from(WINNER_LIST_URI, "utf-8"), 
 };
 
 async function main() {
@@ -141,7 +146,7 @@ async function main() {
   // const attestation = await fetchAttestation(client.rpc, ATTESTATION_PDA.toString() as Address);
   // console.log("attestation is :", attestation);
   const stakeMint = USDC_MINT;
-  const challengeName = "DESCIP-TEST-CHALLENGE5";
+  
   const stakeAmount = 50n * 10n ** 6n;
   const fee = 0;
   const now = BigInt(Math.floor(Date.now() / 1000));
@@ -164,9 +169,11 @@ async function main() {
   )[0].toString() as Address;
 
   let challenge = PublicKey.findProgramAddressSync(
-    [Buffer.from("challenge"), bs58.decode(initiator.address), Buffer.from(challengeName)],
+    [Buffer.from("challenge"), bs58.decode(initiator.address), Buffer.from(CHALLENGE_NAME)],
     PROGRAM_ID
   )[0].toString() as Address;
+
+  attestation_data["challenge"] = bs58.decode(challenge);
 
   let resolution = PublicKey.findProgramAddressSync(
     [Buffer.from("resolution"), bs58.decode(challenge)],
@@ -212,6 +219,18 @@ async function main() {
     false
   ).toString() as Address;
 
+  if (IS_INIT) {
+    console.log("\n0. Init Credential Authority...");
+    const initAuthorityInstruction = getInitAuthorityInstruction({
+      signer: authority,
+      credentialAuthority
+    })
+    await sendAndConfirmInstructions(client, initiator, [initAuthorityInstruction], "Authority inited");
+    console.log(`    - credential_authority PDA: ${credentialAuthority}`);
+  }
+  // let credential_pda = await fetchCredential(client.rpc, CREDENTIAL_PDA.toString() as Address);
+  // console.log("sas credential data", credential_pda);
+
   console.log("\n1. Create Challenge...");
   const createChallengeInstruction = getCreateChallengeInstruction({
     initiator,
@@ -221,7 +240,7 @@ async function main() {
     credential: CREDENTIAL_PDA.toString() as Address,
     credentialAuthority,
     stakeMint: stakeMint.toString() as Address,
-    name: challengeName,
+    name: CHALLENGE_NAME,
     tokenAllowed: TokenAllowed.USDC,
     stakeAmount,
     fee,
@@ -264,7 +283,6 @@ async function main() {
     challengerAta: loserAta
   });
 
-  
   await sendAndConfirmInstructions(client, loser, [stakeInstruction3], "Loser staked");
 
   // create merkle tree proof ans store data
@@ -287,11 +305,11 @@ async function main() {
       attestation: attestationPda,
       nonce,
       expiry: expiryTimestamp,
-      data: serializeAttestationData(schema.data, CONFIG.ATTESTATION_DATA),
+      data: serializeAttestationData(schema.data, attestation_data),
   });
 
   await sendAndConfirmInstructions(client, payer, [createAttestationInstruction], 'Attestation created');
-  console.log(`    - Attestation PDA: ${attestationPda}`); 
+  // console.log(`    - Attestation PDA: ${attestationPda}`); 
 
   const attestation = await fetchAttestation(client.rpc, attestationPda);
 
@@ -341,7 +359,7 @@ async function main() {
   console.log("\n7. Closing Attestation...");
 
   const eventAuthority = await deriveEventAuthorityAddress();
-  const closeAttestationInstruction = await getCloseAttestationInstruction({
+  const closeAttestationInstruction = getCloseAttestationInstruction({
       payer,
       attestation: attestation.address,
       authority: authority,
@@ -350,7 +368,7 @@ async function main() {
       attestationProgram: SOLANA_ATTESTATION_SERVICE_PROGRAM_ADDRESS
   });
   await sendAndConfirmInstructions(client, payer, [closeAttestationInstruction], 'Closed attestation');
-}
+};
 
 main().catch(err => {
   console.error("Fatal error in main():", err);

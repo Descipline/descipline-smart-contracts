@@ -2,8 +2,8 @@ import { Keypair, PublicKey, SystemProgram, LAMPORTS_PER_SOL, Transaction } from
 import { HashingAlgorithm, MerkleTree, MerkleProof } from "svm-merkle-tree";
 import * as fs from 'fs';
 
-const whitelistFilePath ="data/input/winner_list.txt"
-const outputFilePath = "data/output/winner_list_proofs.json"
+const whitelistFilePath ="data2/input/winner_list.txt"
+const outputFilePath = "data2/output/winner_list_proofs.json"
 
 async function main() {  
   let whitelistedAddresses: string[];

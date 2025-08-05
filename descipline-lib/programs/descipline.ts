@@ -23,7 +23,7 @@ import {
 } from '../instructions';
 
 export const DESCIPLINE_PROGRAM_ADDRESS =
-  '5how19SLnecRwk7hQBrEKU3bF8KwH3Z6vXUDiwGssFFc' as Address<'5how19SLnecRwk7hQBrEKU3bF8KwH3Z6vXUDiwGssFFc'>;
+  '2s3weLk9GXoqkbw377YbiQpfQX1eQ6DxUsfHi82WRZLF' as Address<'2s3weLk9GXoqkbw377YbiQpfQX1eQ6DxUsfHi82WRZLF'>;
 
 export enum DesciplineAccount {
   Challenge,
@@ -170,7 +170,7 @@ export function identifyDesciplineInstruction(
 }
 
 export type ParsedDesciplineInstruction<
-  TProgram extends string = '5how19SLnecRwk7hQBrEKU3bF8KwH3Z6vXUDiwGssFFc',
+  TProgram extends string = '2s3weLk9GXoqkbw377YbiQpfQX1eQ6DxUsfHi82WRZLF',
 > =
   | ({
       instructionType: DesciplineInstruction.Claim;

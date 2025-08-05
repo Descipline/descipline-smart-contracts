@@ -10,7 +10,7 @@ use anchor_lang::prelude::*;
 pub use instructions::*;
 pub use constants::*;
 
-declare_id!("5how19SLnecRwk7hQBrEKU3bF8KwH3Z6vXUDiwGssFFc");
+declare_id!("2s3weLk9GXoqkbw377YbiQpfQX1eQ6DxUsfHi82WRZLF");
 
 #[program]
 pub mod descipline {

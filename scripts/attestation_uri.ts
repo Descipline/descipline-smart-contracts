@@ -1,4 +1,4 @@
-import wallet from "/home/fc/.config/solana/id.json"
+import wallet from "../data/authority.json"
 import { createUmi } from "@metaplex-foundation/umi-bundle-defaults"
 import { createGenericFile, createSignerFromKeypair, signerIdentity } from "@metaplex-foundation/umi"
 import { irysUploader } from "@metaplex-foundation/umi-uploader-irys"
