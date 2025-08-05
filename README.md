@@ -20,7 +20,6 @@
 
 ## **🛠 How It Works**
 
-**High-level flow:**
 1. **Create Challenge**  
    - Initiator sets challenge details (goal, stake amount, deadline).  
    - Contract stores challenge data on-chain.  
@@ -55,42 +54,34 @@
 ---
 
 ## **📂 Project Structure**
-- [frontend repository](https://github.com/Descipline/descipline-frontend)
-  ```
-  descipline-frontend/
-  │── public/
-  │── src/
-  │── .gitignore
-  │── README.md
-  │── babel.config.js
-  │── jsconfig.json
-  │── package-lock.json
-  │── package.json
-  │── vue.config.js
 
-  ```
-- [smart contracts repository](https://github.com/Descipline/descipline-smart-contracts)
-  - struct
+- struct
+   ```
+   descipline-smart-contracts/
+   │── programs/               # smart contract(s)
+   │   └── descipline/          
+   │       ├── src/             
+   │       ├── Cargo.toml       
+   │       └── Anchor.toml      
+   │
+   │── scripts/                # Helper scripts
+   │── tests/                  # Integration tests
+   │── README.md
+   ```
+- dependencies
+   ```
+   anchor-cli 0.30.1
+   solana-cli 2.2.17
+   rustc 1.87.0
+   ```
 
-    ```
-    descipline-smart-contracts/
-    │── programs/               # smart contract(s)
-    │   └── descipline/          
-    │       ├── src/             
-    │       ├── Cargo.toml       
-    │       └── Anchor.toml      
-    │
-    │── scripts/                # Helper scripts
-    │── tests/                  # Integration tests
-    │── README.md
-    ```
-  - run
-    ```
-    yarn manual:build
-    anchor deploy
-    yarn codama-idl
-    yarn test
-    ```
+- run
+   ```
+   yarn manual:build
+   anchor deploy
+   yarn codama-idl
+   yarn test
+   ```
 ## **🔧 Dev Tools**
 - [gill](https://github.com/DecalLabs/gill)
 - [codama](https://github.com/codama-idl/codama)
